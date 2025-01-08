@@ -5,21 +5,16 @@
 // Any problem you faced while coding this : 
 /**
  * node == null case not handled
-*/
-
-// Your code here along with comments explaining your approach
-
-/**
+ * <p>
  * Intuition: Graph and traversal problem
  * Hence, apply BFS or DFS to traverse all the nodes and their adj. list.
- * 
+ * <p>
  * NOTE: Maintain a mapping of the original node and the deep copy node.
  */
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.Map;
+// Your code here along with comments explaining your approach
+
+import java.util.*;
 
 public class CloneGraph {
 
@@ -50,25 +45,28 @@ public class CloneGraph {
     // Space Complexity : O(V) + O(V)
     public Node cloneGraph_bfs(Node node) {
         if (node == null) {
-            return null;
+            return node;
         }
-        Deque<Node> queue = new ArrayDeque<>();
-        queue.offer(node);
+        Map<Node, Node> oldNewMap = new HashMap<>();
+        Deque<Node> q = new ArrayDeque<>();
+        q.offer(node);
+        // add to Q and mark as visited
+        oldNewMap.put(node, new Node(node.val, new ArrayList<>()));
+        while (!q.isEmpty()) {
+            Node curr = q.poll();
+            Node clone = oldNewMap.get(curr);
 
-        nodes.put(node, new Node(node.val));
-
-        while (!queue.isEmpty()) {
-            Node poll = queue.poll();
-
-            for (Node adj : poll.neighbors) {
-                if (!nodes.containsKey(adj)) {
-                    nodes.put(adj, new Node(adj.val));
-                    queue.offer(adj);
+            for (Node neigh : curr.neighbors) {
+                Node neighClone = oldNewMap.getOrDefault(neigh, new Node(neigh.val, new ArrayList<>()));
+                if (!oldNewMap.containsKey(neigh)) {
+                    // add to Q and mark as visited
+                    oldNewMap.put(neigh, neighClone);
+                    q.offer(neigh);
                 }
-                nodes.get(poll).neighbors.add(nodes.get(adj));
+                clone.neighbors.add(neighClone);
             }
         }
-        return nodes.get(node);
+        return oldNewMap.get(node);
     }
 
     private Map<Integer, Node> nodes_dfs = new HashMap<>();
@@ -77,21 +75,25 @@ public class CloneGraph {
     // Space Complexity : O(V) + O(V)
     public Node cloneGraph_dfs(Node node) {
         if (node == null) {
-            return null;
+            return node;
         }
-        if (nodes_dfs.containsKey(node.val)) {
-            return nodes_dfs.get(node.val);
-        }
-        // logic
-        Node clone = new Node(node.val);
-        nodes_dfs.put(node.val, clone);
-        List<Node> neighbors = clone.neighbors;
+        Map<Node, Node> oldNewMap = new HashMap<>();
+        dfs(node, oldNewMap);
+        return oldNewMap.get(node);
+    }
 
-        for (Node adj : node.neighbors) {
-            Node adjClone = cloneGraph_dfs(adj);
-            neighbors.add(adjClone);
+    private void dfs(Node node, Map<Node, Node> oldNewMap) {
+        oldNewMap.put(node, new Node(node.val, new ArrayList<>()));
+        Node clone = oldNewMap.get(node);
+
+        for (Node neigh : node.neighbors) {
+            // if unvisited
+            if (!oldNewMap.containsKey(neigh)) {
+                dfs(neigh, oldNewMap);
+            }
+            Node neighClone = oldNewMap.get(neigh);
+            clone.neighbors.add(neighClone);
         }
-        return clone;
     }
 
 }
